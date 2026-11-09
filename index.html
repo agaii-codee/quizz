@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Bahasa Inggris UKRI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-950 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="w-full bg-slate-900/80 backdrop-blur-md border-b border-slate-800 p-4 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent">Assessment of General English</h1>
+                <p class="text-xs text-slate-400">Informatics Engineering - UKRI Practice Quiz</p>
+            </div>
+            <div id="progress-indicator" class="text-sm bg-indigo-900/60 border border-indigo-700/50 px-3 py-1 rounded-full font-medium text-indigo-300">
+                Soal <span id="current-q-num">1</span> dari <span id="total-q-num">20</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-3xl mx-auto p-4 sm:p-6 my-auto flex-grow flex flex-col justify-center">
+
+        <!-- Welcome / Start Screen -->
+        <div id="start-screen" class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
+            <div class="w-16 h-16 bg-indigo-600/30 border border-indigo-500/50 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-inner">
+                ✨
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">Latihan Soal Bahasa Inggris (Tingkat Menengah)</h2>
+                <p class="text-slate-300 text-sm sm:text-base max-w-lg mx-auto">
+                    Kuis interaktif tingkat menengah dengan variasi pilihan jawaban yang diacak (A, B, C, D). Lengkap dengan penjelasan tata bahasa dalam Bahasa Indonesia!
+                </p>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 py-2 text-xs font-semibold text-slate-400">
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">8 Parts of Speech</div>
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">3 Negative Sentences</div>
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">3 Interrogative Sentences</div>
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">6 Fill in the Blank</div>
+            </div>
+            <button onclick="startQuiz()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer">
+                Mulai Kuis 🚀
+            </button>
+        </div>
+
+        <!-- Quiz Interface Screen -->
+        <div id="quiz-screen" class="hidden bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-5 sm:p-8 shadow-2xl space-y-6">
+            
+            <!-- Category Tag & Question Counter -->
+            <div class="flex justify-between items-center">
+                <span id="question-category" class="text-xs uppercase tracking-wider bg-blue-900/60 text-blue-300 border border-blue-700/50 px-3 py-1 rounded-full font-bold"></span>
+                <span id="question-index-label" class="text-xs font-medium text-slate-400"></span>
+            </div>
+
+            <!-- Question Text Box -->
+            <div class="space-y-2">
+                <h3 id="question-text" class="text-lg sm:text-xl font-semibold text-white leading-relaxed"></h3>
+                <p id="question-subtext" class="text-sm font-medium text-indigo-300"></p>
+            </div>
+
+            <!-- Options Container (Multiple Choice) -->
+            <div id="mcq-options-container" class="space-y-3">
+                <!-- Dynamic Options injected here -->
+            </div>
+
+            <!-- Input Container (Text Input for Transformation/Fill-in-the-blank) -->
+            <div id="input-container" class="hidden space-y-3">
+                <input type="text" id="user-text-input" placeholder="Ketik jawaban kamu di sini..." 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-base shadow-inner">
+                <button onclick="submitTextInput()" id="submit-text-btn" 
+                    class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition shadow-md cursor-pointer">
+                    Periksa Jawaban
+                </button>
+            </div>
+
+            <!-- Feedback & Explanation Box (Hidden initially) -->
+            <div id="feedback-box" class="hidden rounded-xl p-4 border transition-all duration-300 space-y-2">
+                <div class="flex items-center space-x-2">
+                    <span id="feedback-icon" class="text-xl"></span>
+                    <h4 id="feedback-title" class="font-bold text-base"></h4>
+                </div>
+                <p id="feedback-explanation" class="text-sm text-slate-200 leading-relaxed pl-7"></p>
+            </div>
+
+            <!-- Next Button (Hidden until answered) -->
+            <div class="flex justify-end pt-2">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold rounded-xl shadow-lg shadow-emerald-600/20 transition cursor-pointer flex items-center space-x-2">
+                    <span>Soal Berikutnya</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
+            <div class="w-20 h-20 bg-gradient-to-br from-amber-500 to-indigo-600 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-xl shadow-indigo-500/20">
+                🏆
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-2xl sm:text-3xl font-bold text-white">Kuis Selesai!</h2>
+                <p class="text-slate-300">Hebat! Kamu telah menyelesaikan seluruh soal latihan dari modul.</p>
+            </div>
+            
+            <div class="bg-slate-900/70 border border-slate-700 p-6 rounded-2xl max-w-xs mx-auto space-y-1 shadow-inner">
+                <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Skor Akhir Kamu</p>
+                <div class="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400" id="final-score">0 / 20</div>
+                <p id="score-remark" class="text-xs text-indigo-300 font-medium pt-1"></p>
+            </div>
+
+            <button onclick="restartQuiz()" class="px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition cursor-pointer">
+                Ulangi Kuis 🔄
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-4 text-xs text-slate-500 border-t border-slate-800/80">
+        Interactive English Assessment Platform &bull; UKRI Informatics Engineering
+    </footer>
+
+    <!-- Custom Modal for Alerts (replacing alert()) -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 text-center">
+            <div id="modal-icon" class="text-3xl">⚠️</div>
+            <h3 id="modal-title" class="text-lg font-bold text-white">Perhatian</h3>
+            <p id="modal-message" class="text-sm text-slate-300"></p>
+            <button onclick="closeModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition cursor-pointer">
+                Mengerti
+            </button>
+        </div>
+    </div>
+
+    <!-- Quiz Logic Script -->
+    <script>
+        // Database Soal Tingkat Menengah (Medium Level) dengan Kunci Jawaban Teracak (Variasi A, B, C, D)
+        const quizData = [
+            // PART I: PARTS OF SPEECH (1-8)
+            {
+                category: "Part I: Parts of Speech (No. 1)",
+                type: "mcq",
+                question: "1. \"The new software runs extremely fast on this laptop.\"",
+                subtext: "What is the part of speech for the word \"extremely\"?",
+                options: [
+                    { label: "A) ADJECTIVE", value: "A" },
+                    { label: "B) ADVERB", value: "B" },
+                    { label: "C) PREPOSITION", value: "C" },
+                    { label: "D) NOUN", value: "D" }
+                ],
+                correct: "B",
+                explanation: "\"Extremely\" adalah Adverb (kata keterangan tingkat/degree). Kata ini menerangkan kata keterangan lain yaitu \"fast\" (sangat cepat)."
+            },
+            {
+                category: "Part I: Parts of Speech (No. 2)",
+                type: "mcq",
+                question: "2. \"We stayed inside the office because of the heavy rain.\"",
+                subtext: "What is the part of speech for the phrase \"because of\"?",
+                options: [
+                    { label: "A) CONJUNCTION", value: "A" },
+                    { label: "B) VERB", value: "B" },
+                    { label: "C) PREPOSITION", value: "C" },
+                    { label: "D) ADVERB", value: "D" }
+                ],
+                correct: "C",
+                explanation: "\"Because of\" adalah Prepositional Phrase (frasa kata depan) yang diikuti oleh kata benda/frasa benda (\"the heavy rain\"). Berbeda dengan \"because\" (conjunction) yang diikuti klausa."
+            },
+            {
+                category: "Part I: Parts of Speech (No. 3)",
+                type: "mcq",
+                question: "3. \"Although the algorithm was complex, the team solved it quickly.\"",
+                subtext: "What is the part of speech for the word \"Although\"?",
+                options: [
+                    { label: "A) CONJUNCTION", value: "A" },
+                    { label: "B) PREPOSITION", value: "B" },
+                    { label: "C) ADJECTIVE", value: "C" },
+                    { label: "D) PRONOUN", value: "D" }
+                ],
+                correct: "A",
+                explanation: "\"Although\" adalah Subordinating Conjunction (kata hubung) yang digunakan untuk menghubungkan klausa bertentangan/kontras."
+            },
+            {
+                category: "Part I: Parts of Speech (No. 4)",
+                type: "mcq",
+                question: "4. \"Neither of the proposed solutions works for our current database architecture.\"",
+                subtext: "What is the part of speech for the word \"Neither\" in this sentence?",
+                options: [
+                    { label: "A) ADJECTIVE", value: "A" },
+                    { label: "B) VERB", value: "B" },
+                    { label: "C) CONJUNCTION", value: "C" },
+                    { label: "D) PRONOUN", value: "D" }
+                ],
+                correct: "D",
+                explanation: "\"Neither\" bertindak sebagai Indefinite Pronoun (kata ganti) yang merujuk pada 'tidak satu pun dari keduanya' dan berfungsi sebagai subjek kalimat."
+            },
+            {
+                category: "Part I: Parts of Speech (No. 5)",
+                type: "mcq",
+                question: "5. \"The IT department conducted a thorough investigation into the data breach.\"",
+                subtext: "What is the part of speech for the word \"thorough\"?",
+                options: [
+                    { label: "A) ADVERB", value: "A" },
+                    { label: "B) ADJECTIVE", value: "B" },
+                    { label: "C) NOUN", value: "C" },
+                    { label: "D) VERB", value: "D" }
+                ],
+                correct: "B",
+                explanation: "\"Thorough\" (menyeluruh/mendalam) adalah Adjective (kata sifat) yang menjelaskan kata benda \"investigation\"."
+            },
+            {
+                category: "Part I: Parts of Speech (No. 6)",
+                type: "mcq",
+                question: "6. \"Ouch! That sudden power surge fried my computer component.\"",
+                subtext: "What is the part of speech for the word \"Ouch\"?",
+                options: [
+                    { label: "A) CONJUNCTION", value: "A" },
+                    { label: "B) PREPOSITION", value: "B" },
+                    { label: "C) INTERJECTION", value: "C" },
+                    { label: "D) ADVERB", value: "D" }
+                ],
+                correct: "C",
+                explanation: "\"Ouch!\" adalah Interjection (kata seru) yang mengekspresikan emosi spontan atau rasa sakit."
+            },
+            {
+                category: "Part I: Parts of Speech (No. 7)",
+                type: "mcq",
+                question: "7. \"Students must submit their assignments before midnight.\"",
+                subtext: "What is the part of speech for the word \"assignments\"?",
+                options: [
+                    { label: "A) VERB", value: "A" },
+                    { label: "B) NOUN", value: "B" },
+                    { label: "C) ADJECTIVE", value: "C" },
+                    { label: "D) PRONOUN", value: "D" }
+                ],
+                correct: "B",
+                explanation: "\"Assignments\" (tugas-tugas) adalah Noun (kata benda jamak) yang berfungsi sebagai objek langsung dari kata kerja \"submit\"."
+            },
+            {
+                category: "Part I: Parts of Speech (No. 8)",
+                type: "mcq",
+                question: "8. \"The server crashed suddenly while we were testing the new updates.\"",
+                subtext: "What is the part of speech for the word \"crashed\"?",
+                options: [
+                    { label: "A) VERB", value: "A" },
+                    { label: "B) ADJECTIVE", value: "B" },
+                    { label: "C) NOUN", value: "C" },
+                    { label: "D) PREPOSITION", value: "D" }
+                ],
+                correct: "A",
+                explanation: "\"Crashed\" adalah Verb (kata kerja bentuk lampau/Past Tense) yang menunjukkan tindakan atau kejadian yang dialami oleh server."
+            },
+
+            // PART II: CHANGE INTO NEGATIVE (9-11)
+            {
+                category: "Part II: Change into Negative (No. 9)",
+                type: "mcq",
+                question: "9. Positive Statement: \"He teaches network programming on Mondays.\"",
+                subtext: "Manakah bentuk NEGATIVE (Simple Present Tense) yang benar?",
+                options: [
+                    { label: "A) He don't teach network programming on Mondays.", value: "A" },
+                    { label: "B) He doesn't teaches network programming on Mondays.", value: "B" },
+                    { label: "C) He doesn't teach network programming on Mondays.", value: "C" },
+                    { label: "D) He isn't teach network programming on Mondays.", value: "D" }
+                ],
+                correct: "C",
+                explanation: "Untuk subjek tunggal 'He' dalam Simple Present Tense, gunakan 'doesn't' + Verb 1 dasar tanpa tambahan '-es' (doesn't teach)."
+            },
+            {
+                category: "Part II: Change into Negative (No. 10)",
+                type: "mcq",
+                question: "10. Positive Statement: \"They bought a new server for the office yesterday.\"",
+                subtext: "Manakah bentuk NEGATIVE (Simple Past Tense) yang benar?",
+                options: [
+                    { label: "A) They didn't bought a new server for the office yesterday.", value: "A" },
+                    { label: "B) They didn't buy a new server for the office yesterday.", value: "B" },
+                    { label: "C) They don't buy a new server for the office yesterday.", value: "C" },
+                    { label: "D) They haven't bought a new server for the office yesterday.", value: "D" }
+                ],
+                correct: "B",
+                explanation: "Untuk kalimat negatif Simple Past Tense, gunakan kata bantu 'didn't' diikuti kata kerja dasar bentuk pertama Verb 1 ('buy', bukan 'bought')."
+            },
+            {
+                category: "Part II: Change into Negative (No. 11)",
+                type: "mcq",
+                question: "11. Positive Statement: \"The developers have completed the mobile application.\"",
+                subtext: "Manakah bentuk NEGATIVE (Present Perfect Tense) yang benar?",
+                options: [
+                    { label: "A) The developers haven't completed the mobile application.", value: "A" },
+                    { label: "B) The developers didn't complete the mobile application.", value: "B" },
+                    { label: "C) The developers don't complete the mobile application.", value: "C" },
+                    { label: "D) The developers haven't complete the mobile application.", value: "D" }
+                ],
+                correct: "A",
+                explanation: "Bentuk negatif Present Perfect Tense menggunakan 'haven't/hasn't' + Verb 3 ('completed'). Karena subjek 'developers' jamak, bentuk yang benar adalah 'haven't completed'."
+            },
+
+            // PART III: CHANGE INTO INTERROGATIVE (12-14)
+            {
+                category: "Part III: Change into Interrogative (No. 12)",
+                type: "mcq",
+                question: "12. Positive Statement: \"She found the error in the source code.\"",
+                subtext: "Manakah bentuk INTERROGATIVE (Kalimat Tanya Simple Past) yang benar?",
+                options: [
+                    { label: "A) Does she find the error in the source code?", value: "A" },
+                    { label: "B) Did she found the error in the source code?", value: "B" },
+                    { label: "C) Did she find the error in the source code?", value: "C" },
+                    { label: "D) Has she found the error in the source code?", value: "D" }
+                ],
+                correct: "C",
+                explanation: "Kalimat tanya Simple Past diawali dengan kata bantu 'Did' + Subjek + Verb 1 ('find'). Kata kerja 'found' kembali ke bentuk dasar 'find'."
+            },
+            {
+                category: "Part III: Change into Interrogative (No. 13)",
+                type: "mcq",
+                question: "13. Positive Statement: \"We can access the database remotely.\"",
+                subtext: "Manakah bentuk INTERROGATIVE (Modal Verb) yang benar?",
+                options: [
+                    { label: "A) Do we can access the database remotely?", value: "A" },
+                    { label: "B) Can we access the database remotely?", value: "B" },
+                    { label: "C) Are we can access the database remotely?", value: "C" },
+                    { label: "D) Can we accessed the database remotely?", value: "D" }
+                ],
+                correct: "B",
+                explanation: "Untuk membuat kalimat tanya dengan Modal Verb (Can), cukuplah memindahkan modal 'Can' ke paling depan sebelum subjek: 'Can we access...'."
+            },
+            {
+                category: "Part III: Change into Interrogative (No. 14)",
+                type: "mcq",
+                question: "14. Positive Statement: \"The engineers are configuring the network switch.\"",
+                subtext: "Manakah bentuk INTERROGATIVE (Present Continuous) yang benar?",
+                options: [
+                    { label: "A) Are the engineers configuring the network switch?", value: "A" },
+                    { label: "B) Do the engineers configuring the network switch?", value: "B" },
+                    { label: "C) Have the engineers configured the network switch?", value: "C" },
+                    { label: "D) Is the engineers configuring the network switch?", value: "D" }
+                ],
+                correct: "A",
+                explanation: "Kalimat tanya Present Continuous dibentuk dengan memindahkan Auxiliary Verb (To Be) ke depan subjek: 'Are + the engineers + configuring...?'."
+            },
+
+            // PART IV: FILL IN THE BLANK / TENSES (15-20)
+            {
+                category: "Part IV: Fill in the Blank (No. 15)",
+                type: "mcq",
+                question: "15. \"I ________ (not see) Mr. Aris since we finished the project last month.\"",
+                subtext: "Pilihlah bentuk kata kerja (Tense) yang tepat:",
+                options: [
+                    { label: "A) didn't see", value: "A" },
+                    { label: "B) haven't seen", value: "B" },
+                    { label: "C) don't see", value: "C" },
+                    { label: "D) won't see", value: "D" }
+                ],
+                correct: "B",
+                explanation: "Keterangan waktu \"since...\" menandakan Present Perfect Tense (kegiatan yang terjadi dari kurun waktu tertentu di masa lalu hingga sekarang). Polanya: haven't + V3 (haven't seen)."
+            },
+            {
+                category: "Part IV: Fill in the Blank (No. 16)",
+                type: "mcq",
+                question: "16. \"While the technician ________ (repair) the cable, the power went out.\"",
+                subtext: "Pilihlah bentuk Tense yang tepat:",
+                options: [
+                    { label: "A) is repairing", value: "A" },
+                    { label: "B) repairs", value: "B" },
+                    { label: "C) has repaired", value: "C" },
+                    { label: "D) was repairing", value: "D" }
+                ],
+                correct: "D",
+                explanation: "Kata \"While\" menunjukkan suatu aksi yang sedang berlangsung di masa lalu (Past Continuous: was repairing) ketika aksi lain yang lebih singkat menyela (Simple Past: power went out)."
+            },
+            {
+                category: "Part IV: Fill in the Blank (No. 17)",
+                type: "mcq",
+                question: "17. \"If you practice coding every day, you ________ (master) Python easily.\"",
+                subtext: "Pilihlah bentuk CONDITIONAL TYPE 1 yang tepat:",
+                options: [
+                    { label: "A) will master", value: "A" },
+                    { label: "B) would master", value: "B" },
+                    { label: "C) mastered", value: "C" },
+                    { label: "D) have mastered", value: "D" }
+                ],
+                correct: "A",
+                explanation: "Conditional Type 1 (pengandaian realistis masa depan): Klausa 'if' menggunakan Simple Present ('practice'), maka klausa utama wajib menggunakan 'will + V1' ('will master')."
+            },
+            {
+                category: "Part IV: Fill in the Blank (No. 18)",
+                type: "mcq",
+                question: "18. \"If I ________ (have) more free time, I would learn cyber security.\"",
+                subtext: "Pilihlah bentuk CONDITIONAL TYPE 2 yang tepat:",
+                options: [
+                    { label: "A) have", value: "A" },
+                    { label: "B) had", value: "B" },
+                    { label: "C) will have", value: "C" },
+                    { label: "D) would have", value: "D" }
+                ],
+                correct: "B",
+                explanation: "Conditional Type 2 (pengandaian tidak nyata di masa kini): Klausa 'if' menggunakan Simple Past (V2: 'had'), sedangkan klausa utama menggunakan 'would + V1' ('would learn')."
+            },
+            {
+                category: "Part IV: Fill in the Blank (No. 19)",
+                type: "mcq",
+                question: "19. \"The new security policy ________ (announce) by the manager tomorrow morning.\"",
+                subtext: "Pilihlah bentuk PASSIVE VOICE yang tepat:",
+                options: [
+                    { label: "A) is announced", value: "A" },
+                    { label: "B) was announced", value: "B" },
+                    { label: "C) will be announced", value: "C" },
+                    { label: "D) will announce", value: "D" }
+                ],
+                correct: "C",
+                explanation: "Keterangan waktu \"tomorrow morning\" menunjukkan masa depan (Future Passive Voice). Pola kalimat pasifnya adalah: 'will be + V3' ('will be announced')."
+            },
+            {
+                category: "Part IV: Fill in the Blank (No. 20)",
+                type: "mcq",
+                question: "20. \"Listen! The team manager ________ (explain) the new project requirements in the meeting room.\"",
+                subtext: "Pilihlah bentuk PRESENT CONTINUOUS yang tepat:",
+                options: [
+                    { label: "A) explains", value: "A" },
+                    { label: "B) explained", value: "B" },
+                    { label: "C) has explained", value: "C" },
+                    { label: "D) is explaining", value: "D" }
+                ],
+                correct: "D",
+                explanation: "Kata seru \"Listen!\" menunjukkan bahwa suatu tindakan sedang berlangsung secara langsung pada saat ini (Present Continuous Tense: is/am/are + V-ing -> 'is explaining')."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answeredCurrent = false;
+
+        function showModal(title, message, icon = "⚠️") {
+            document.getElementById("modal-title").innerText = title;
+            document.getElementById("modal-message").innerText = message;
+            document.getElementById("modal-icon").innerText = icon;
+            document.getElementById("custom-modal").classList.remove("hidden");
+        }
+
+        function closeModal() {
+            document.getElementById("custom-modal").classList.add("hidden");
+        }
+
+        function startQuiz() {
+            document.getElementById("start-screen").classList.add("hidden");
+            document.getElementById("quiz-screen").classList.remove("hidden");
+            document.getElementById("total-q-num").innerText = quizData.length;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answeredCurrent = false;
+            const q = quizData[currentQuestionIndex];
+
+            // Update Header progress
+            document.getElementById("current-q-num").innerText = currentQuestionIndex + 1;
+            document.getElementById("question-index-label").innerText = `Pertanyaan ${currentQuestionIndex + 1} / ${quizData.length}`;
+            document.getElementById("question-category").innerText = q.category;
+
+            // Update Question texts
+            document.getElementById("question-text").innerText = q.question;
+            document.getElementById("question-subtext").innerText = q.subtext;
+
+            // Reset UI components
+            const mcqContainer = document.getElementById("mcq-options-container");
+            const inputContainer = document.getElementById("input-container");
+            const feedbackBox = document.getElementById("feedback-box");
+            const nextBtn = document.getElementById("next-btn");
+
+            feedbackBox.classList.add("hidden");
+            nextBtn.classList.add("hidden");
+
+            if (q.type === "mcq") {
+                mcqContainer.classList.remove("hidden");
+                inputContainer.classList.add("hidden");
+                
+                mcqContainer.innerHTML = "";
+                q.options.forEach(opt => {
+                    const btn = document.createElement("button");
+                    btn.className = "w-full text-left p-4 rounded-xl bg-slate-900/60 border border-slate-700 hover:border-indigo-500 hover:bg-slate-900 text-slate-200 font-medium transition flex items-center justify-between group cursor-pointer";
+                    btn.innerHTML = `
+                        <span>${opt.label}</span>
+                        <span class="w-6 h-6 rounded-full border border-slate-600 group-hover:border-indigo-400 flex items-center justify-center text-xs"></span>
+                    `;
+                    btn.onclick = () => selectMCQ(opt.value, btn);
+                    mcqContainer.appendChild(btn);
+                });
+            } else {
+                mcqContainer.classList.add("hidden");
+                inputContainer.classList.remove("hidden");
+                document.getElementById("user-text-input").value = "";
+                document.getElementById("user-text-input").disabled = false;
+                document.getElementById("submit-text-btn").disabled = false;
+            }
+        }
+
+        function selectMCQ(selectedVal, selectedBtn) {
+            if (answeredCurrent) return;
+            answeredCurrent = true;
+
+            const q = quizData[currentQuestionIndex];
+            const isCorrect = (selectedVal === q.correct);
+
+            if (isCorrect) score++;
+
+            // Disable all MCQ buttons & highlight
+            const buttons = document.getElementById("mcq-options-container").children;
+            for (let btn of buttons) {
+                btn.disabled = true;
+                const val = btn.querySelector("span").innerText.charAt(0);
+                if (val === q.correct) {
+                    btn.classList.remove("bg-slate-900/60", "border-slate-700");
+                    btn.classList.add("bg-emerald-950/80", "border-emerald-500", "text-emerald-200");
+                } else if (val === selectedVal && !isCorrect) {
+                    btn.classList.remove("bg-slate-900/60", "border-slate-700");
+                    btn.classList.add("bg-rose-950/80", "border-rose-500", "text-rose-200");
+                }
+            }
+
+            showFeedback(isCorrect, q.explanation);
+        }
+
+        function submitTextInput() {
+            if (answeredCurrent) return;
+            
+            const userVal = document.getElementById("user-text-input").value.trim().toLowerCase();
+            if (!userVal) {
+                showModal("Peringatan", "Silakan ketik jawaban Anda terlebih dahulu!", "✍️");
+                return;
+            }
+
+            answeredCurrent = true;
+            document.getElementById("user-text-input").disabled = true;
+            document.getElementById("submit-text-btn").disabled = true;
+
+            const q = quizData[currentQuestionIndex];
+            
+            // Normalize user answer (remove trailing question mark or extra spaces for tolerant checking)
+            const cleanUserVal = userVal.replace(/[?.,]/g, "").replace(/\s+/g, " ");
+            
+            let isCorrect = false;
+            for (let ans of q.acceptedAnswers) {
+                const cleanAns = ans.toLowerCase().replace(/[?.,]/g, "").replace(/\s+/g, " ");
+                if (cleanUserVal === cleanAns) {
+                    isCorrect = true;
+                    break;
+                }
+            }
+
+            if (isCorrect) score++;
+
+            showFeedback(isCorrect, q.explanation);
+        }
+
+        function showFeedback(isCorrect, explanation) {
+            const feedbackBox = document.getElementById("feedback-box");
+            const feedbackIcon = document.getElementById("feedback-icon");
+            const feedbackTitle = document.getElementById("feedback-title");
+            const feedbackExplanation = document.getElementById("feedback-explanation");
+            const nextBtn = document.getElementById("next-btn");
+
+            feedbackBox.classList.remove("hidden", "bg-emerald-950/40", "border-emerald-700", "bg-rose-950/40", "border-rose-700");
+
+            if (isCorrect) {
+                feedbackBox.classList.add("bg-emerald-950/40", "border-emerald-700");
+                feedbackIcon.innerText = "✅";
+                feedbackTitle.innerText = "Benar! Kerja Bagus!";
+                feedbackTitle.className = "font-bold text-base text-emerald-400";
+            } else {
+                feedbackBox.classList.add("bg-rose-950/40", "border-rose-700");
+                feedbackIcon.innerText = "❌";
+                feedbackTitle.innerText = "Kurang Tepat!";
+                feedbackTitle.className = "font-bold text-base text-rose-400";
+            }
+
+            feedbackExplanation.innerText = "Penjelasan: " + explanation;
+            nextBtn.classList.remove("hidden");
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById("quiz-screen").classList.add("hidden");
+            document.getElementById("result-screen").classList.remove("hidden");
+            document.getElementById("final-score").innerText = `${score} / ${quizData.length}`;
+
+            let remark = "";
+            const percentage = (score / quizData.length) * 100;
+            if (percentage === 100) {
+                remark = "Luar biasa! Nilai Sempurna! Kamu sangat menguasai materi ini. 🌟";
+            } else if (percentage >= 80) {
+                remark = "Sangat Baik! Pemahaman tata bahasamu sudah mantap. 👍";
+            } else if (percentage >= 60) {
+                remark = "Cukup Baik! Terus tingkatkan latihan latihan soalnya ya. 💪";
+            } else {
+                remark = "Ayo pelajari kembali penjelasannya dan coba lagi! Semangat! 📚";
+            }
+            document.getElementById("score-remark").innerText = remark;
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById("result-screen").classList.add("hidden");
+            document.getElementById("start-screen").classList.remove("hidden");
+        }
+    </script>
+</body>
+</html>
